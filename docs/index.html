@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>PDF İçerik Arama</title>
+</head>
+<body>
+  <h1>PDF İçerik Arama Demo</h1>
+  
+  <!-- Arama kutusu ve butonlar -->
+  <input type="text" id="searchInput" placeholder="Aramak istediğiniz kelimeyi girin..." />
+  <button onclick="searchByName()">Koda/İsme Göre Ara</button>
+  <button onclick="searchByContent()">İçeriğe Göre Ara</button>
+  
+  <table border="1" style="margin-top:20px; width: 100%;" id="resultsTable">
+    <thead>
+      <tr>
+        <th>Doküman Kodu</th>
+        <th>Doküman Adı</th>
+        <th>Link</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    let pdfIndex = [];
+    
+    // Bu URL, "index.json" dosyamızın herkese açık paylaşılan linki olmalı.
+    // Örnek format (Nextcloud direkt link):
+    // https://cloud.balikesir.edu.tr/s/UJxVramMrg07rka
+    const JSON_URL = "http://cloud.balikesir.edu.tr/s/UJxVramMrg07rka/download";
+
+    // Sayfa yüklendiğinde, fetch ile JSON'u çekmeye çalışıyoruz
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const response = await fetch(JSON_URL);
+        
+        if (!response.ok) {
+          console.error("index.json çekilemedi. HTTP Hata:", response.status);
+          return;
+        }
+        
+        pdfIndex = await response.json();
+        console.log("JSON yüklendi:", pdfIndex);
+      } catch (error) {
+        console.error("JSON alınırken hata oluştu:", error);
+      }
+    });
+
+    function searchByName() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const tbody = document.querySelector("#resultsTable tbody");
+      tbody.innerHTML = ""; // önce tabloyu temizliyoruz
+
+      // pdfIndex dizisinde code veya name alanında 'query' geçen kayıtları alalım
+      const results = pdfIndex.filter(doc => {
+        const codeMatch = doc.code.toLowerCase().includes(query);
+        const nameMatch = doc.name.toLowerCase().includes(query);
+        return (codeMatch || nameMatch);
+      });
+
+      // sonuçları tabloya ekleyelim
+      results.forEach(doc => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${doc.code}</td>
+          <td>${doc.name}</td>
+          <td><a href="${doc.link}" target="_blank">Dosyayı İncele</a></td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function searchByContent() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const tbody = document.querySelector("#resultsTable tbody");
+      tbody.innerHTML = "";
+
+      // pdfIndex dizisinde content alanında 'query' geçen kayıtları bulalım
+      const results = pdfIndex.filter(doc => {
+        return doc.content.toLowerCase().includes(query);
+      });
+
+      results.forEach(doc => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${doc.code}</td>
+          <td>${doc.name}</td>
+          <td><a href="${doc.link}" target="_blank">Dosyayı İncele</a></td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+  </script>
+</body>
+</html>
